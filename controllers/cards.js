@@ -63,8 +63,8 @@ module.exports.deleteCardById = (req, res) => {
       }
     })
     .catch((err) => {
-      if (err.name === 'DocumentNotFoundError') {
-        responseNotFoundError(res);
+      if (err.name === 'CastError') {
+        responseBadRequestError(res);
       } else {
         responseServerError(res, err.message);
       }

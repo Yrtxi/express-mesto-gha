@@ -47,8 +47,8 @@ module.exports.getUserById = (req, res) => {
       }
     })
     .catch((err) => {
-      if (err.name === 'DocumentNotFoundError') {
-        responseNotFoundError(res);
+      if (err.name === 'CastError') {
+        responseBadRequestError(res);
       } else {
         responseServerError(res, err.message);
       }
@@ -74,7 +74,7 @@ module.exports.createUser = (req, res) => {
 module.exports.updateProfile = (req, res) => {
   const myId = req.user._id;
   const { name, about } = req.body;
-  User.findByIdAndUpdate(myId, { name, about }, { new: true })
+  User.findByIdAndUpdate(myId, { name, about }, { new: true, runValidators: true })
     .then((user) => res.send({ data: user }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -88,7 +88,7 @@ module.exports.updateProfile = (req, res) => {
 module.exports.updateAvatar = (req, res) => {
   const myId = req.user._id;
   const { avatar } = req.body;
-  User.findByIdAndUpdate(myId, { avatar }, { new: true })
+  User.findByIdAndUpdate(myId, { avatar }, { new: true, runValidators: true })
     .then((user) => res.send({ data: user }))
     .catch((err) => {
       if (err.name === 'ValidationError') {

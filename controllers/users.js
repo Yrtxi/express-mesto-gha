@@ -63,7 +63,7 @@ module.exports.createUser = (req, res) => {
     // Вернем записанные в базу данные
     .then((user) => res.send({ data: user }))
     .catch((err) => {
-      if (err.name === 'CastError') {
+      if (err.name === 'ValidationError') {
         responseBadRequestError(res);
       } else {
         responseServerError(res, err.message);
@@ -77,7 +77,7 @@ module.exports.updateProfile = (req, res) => {
   User.findByIdAndUpdate(myId, { name, about }, { new: true })
     .then((user) => res.send({ data: user }))
     .catch((err) => {
-      if (err.name === 'CastError') {
+      if (err.name === 'ValidationError') {
         responseBadRequestError(res);
       } else {
         responseServerError(res, err.message);
@@ -91,7 +91,7 @@ module.exports.updateAvatar = (req, res) => {
   User.findByIdAndUpdate(myId, { avatar }, { new: true })
     .then((user) => res.send({ data: user }))
     .catch((err) => {
-      if (err.name === 'CastError') {
+      if (err.name === 'ValidationError') {
         responseBadRequestError(res);
       } else {
         responseServerError(res, err.message);

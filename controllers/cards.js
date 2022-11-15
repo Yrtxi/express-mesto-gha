@@ -45,7 +45,7 @@ module.exports.createCard = (req, res) => {
     // Вернем записанные в базу данные
     .then((card) => res.send({ data: card }))
     .catch((err) => {
-      if (err.name === 'CastError') {
+      if (err.name === 'ValidationError') {
         responseBadRequestError(res);
       } else {
         responseServerError(res, err.message);
@@ -80,7 +80,7 @@ module.exports.likeCard = (req, res) => {
   )
     .then((card) => res.send({ data: card }))
     .catch((err) => {
-      if (err.name === 'CastError') {
+      if (err.name === 'ValidationError') {
         responseBadRequestError(res);
       } else {
         responseServerError(res, err.message);
@@ -97,7 +97,7 @@ module.exports.dislikeCard = (req, res) => {
   )
     .then((card) => res.send({ data: card }))
     .catch((err) => {
-      if (err.name === 'CastError') {
+      if (err.name === 'ValidationError') {
         responseBadRequestError(res);
       } else {
         responseServerError(res, err.message);

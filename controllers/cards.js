@@ -78,9 +78,15 @@ module.exports.likeCard = (req, res) => {
     { $addToSet: { likes: req.user._id } },
     { new: true },
   )
-    .then((card) => res.send({ data: card }))
+    .then((card) => {
+      if (card === null) {
+        responseNotFoundError(res);
+      } else {
+        res.send({ data: card });
+      }
+    })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'CastError') {
         responseBadRequestError(res);
       } else {
         responseServerError(res, err.message);
@@ -95,9 +101,15 @@ module.exports.dislikeCard = (req, res) => {
     { $pull: { likes: req.user._id } },
     { new: true },
   )
-    .then((card) => res.send({ data: card }))
+    .then((card) => {
+      if (card === null) {
+        responseNotFoundError(res);
+      } else {
+        res.send({ data: card });
+      }
+    })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'CastError') {
         responseBadRequestError(res);
       } else {
         responseServerError(res, err.message);

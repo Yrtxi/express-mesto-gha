@@ -1,39 +1,33 @@
 const { constants } = require('http2');
 const User = require('../models/user');
+const {
+  badRequestUser,
+  notFoundUser,
+  serverError,
+  httpCodes,
+} = require('../constants');
 
 // Обработчик ошибки сервера 400
 const responseBadRequestError = (res) => res
   .status(constants.HTTP_STATUS_BAD_REQUEST)
-  .send({
-    message: 'Некорректные данные для пользователя',
-  });
+  .send(badRequestUser);
 
 // Обработчик ошибки сервера 404
 const responseNotFoundError = (res) => res
   .status(constants.HTTP_STATUS_NOT_FOUND)
-  .send({
-    message: 'Пользователя с таким id не существует',
-  });
+  .send(notFoundUser);
 
 // Обработчик ошибки сервера 500
-const responseServerError = (res, message) => res
+const responseServerError = (res) => res
   .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-  .send({
-    message: `На сервере произошла ошибка. ${message}`,
-  });
+  .send(serverError);
 
 module.exports.getUsers = (req, res) => {
   // Находим всех пользователей
   User.find({})
     // Вернем записанные в базу данные
     .then((users) => res.send({ data: users }))
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        responseBadRequestError(res);
-      } else {
-        responseServerError(res, err.message);
-      }
-    });
+    .catch(() => { responseServerError(res); });
 };
 
 module.exports.getUserById = (req, res) => {
@@ -50,7 +44,7 @@ module.exports.getUserById = (req, res) => {
       if (err.name === 'CastError') {
         responseBadRequestError(res);
       } else {
-        responseServerError(res, err.message);
+        responseServerError(res);
       }
     });
 };
@@ -61,12 +55,12 @@ module.exports.createUser = (req, res) => {
   // Создаем документ на основе пришедших данных
   User.create({ name, about, avatar })
     // Вернем записанные в базу данные
-    .then((user) => res.send({ data: user }))
+    .then((user) => res.status(httpCodes.created).send({ data: user }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         responseBadRequestError(res);
       } else {
-        responseServerError(res, err.message);
+        responseServerError(res);
       }
     });
 };
@@ -75,12 +69,18 @@ module.exports.updateProfile = (req, res) => {
   const myId = req.user._id;
   const { name, about } = req.body;
   User.findByIdAndUpdate(myId, { name, about }, { new: true, runValidators: true })
-    .then((user) => res.send({ data: user }))
+    .then((user) => {
+      if (user === null) {
+        responseNotFoundError(res);
+      } else {
+        res.send({ data: user });
+      }
+    })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'ValidationError' || err.name === 'CastError') {
         responseBadRequestError(res);
       } else {
-        responseServerError(res, err.message);
+        responseServerError(res);
       }
     });
 };
@@ -89,12 +89,18 @@ module.exports.updateAvatar = (req, res) => {
   const myId = req.user._id;
   const { avatar } = req.body;
   User.findByIdAndUpdate(myId, { avatar }, { new: true, runValidators: true })
-    .then((user) => res.send({ data: user }))
+    .then((user) => {
+      if (user === null) {
+        responseNotFoundError(res);
+      } else {
+        res.send({ data: user });
+      }
+    })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'ValidationError' || err.name === 'CastError') {
         responseBadRequestError(res);
       } else {
-        responseServerError(res, err.message);
+        responseServerError(res);
       }
     });
 };

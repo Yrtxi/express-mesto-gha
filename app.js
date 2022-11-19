@@ -1,12 +1,12 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const bodyParser = require('body-parser');
+const { httpCodes, notFoundPage } = require('./constants');
 
-const { PORT = 3000 } = process.env;
+const { PORT = 3000, MONGO_URI = 'mongodb://localhost/mestodb' } = process.env;
 const app = express();
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.use((req, res, next) => {
   req.user = {
@@ -16,14 +16,13 @@ app.use((req, res, next) => {
   next();
 });
 
-// подключаемся к серверу mongo
-mongoose.connect('mongodb://localhost/mestodb');
+mongoose.connect(MONGO_URI);
 
 app.use('/users', require('./routes/users'));
 app.use('/cards', require('./routes/cards'));
 
 app.use('*', (req, res) => {
-  res.status(404).send({ message: 'Страница не найдена' });
+  res.status(httpCodes.notFound).send(notFoundPage);
 });
 
 app.listen(PORT);

@@ -1,39 +1,34 @@
 const { constants } = require('http2');
 const Card = require('../models/card');
+const {
+  badRequestCard,
+  notFoundCard,
+  serverError,
+  httpCodes,
+} = require('../constants');
 
 // Обработчик ошибки сервера 400
 const responseBadRequestError = (res) => res
   .status(constants.HTTP_STATUS_BAD_REQUEST)
-  .send({
-    message: 'Некорректные данные для карточки',
-  });
+  .send(badRequestCard);
 
 // Обработчик ошибки сервера 404
 const responseNotFoundError = (res) => res
   .status(constants.HTTP_STATUS_NOT_FOUND)
-  .send({
-    message: 'Карточки с таким id не существует',
-  });
+  .send(notFoundCard);
 
 // Обработчик ошибки сервера 500
-const responseServerError = (res, message) => res
+const responseServerError = (res) => res
   .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-  .send({
-    message: `На сервере произошла ошибка. ${message}`,
-  });
+  .send(serverError);
 
 module.exports.getCards = (req, res) => {
   // Находим все карточки
   Card.find({})
+    .populate(['owner', 'likes'])
     // Вернем записанные в базу данные
     .then((cards) => res.send({ data: cards }))
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        responseBadRequestError(res);
-      } else {
-        responseServerError(res, err.message);
-      }
-    });
+    .catch(() => { responseServerError(res); });
 };
 
 module.exports.createCard = (req, res) => {
@@ -43,12 +38,12 @@ module.exports.createCard = (req, res) => {
   // Создаем документ на основе пришедших данных
   Card.create({ name, link, owner })
     // Вернем записанные в базу данные
-    .then((card) => res.send({ data: card }))
+    .then((card) => res.status(httpCodes.created).send({ data: card }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         responseBadRequestError(res);
       } else {
-        responseServerError(res, err.message);
+        responseServerError(res);
       }
     });
 };
@@ -66,7 +61,7 @@ module.exports.deleteCardById = (req, res) => {
       if (err.name === 'CastError') {
         responseBadRequestError(res);
       } else {
-        responseServerError(res, err.message);
+        responseServerError(res);
       }
     });
 };
@@ -78,6 +73,7 @@ module.exports.likeCard = (req, res) => {
     { $addToSet: { likes: req.user._id } },
     { new: true },
   )
+    .populate(['owner', 'likes'])
     .then((card) => {
       if (card === null) {
         responseNotFoundError(res);
@@ -89,7 +85,7 @@ module.exports.likeCard = (req, res) => {
       if (err.name === 'CastError') {
         responseBadRequestError(res);
       } else {
-        responseServerError(res, err.message);
+        responseServerError(res);
       }
     });
 };
@@ -101,6 +97,7 @@ module.exports.dislikeCard = (req, res) => {
     { $pull: { likes: req.user._id } },
     { new: true },
   )
+    .populate(['owner', 'likes'])
     .then((card) => {
       if (card === null) {
         responseNotFoundError(res);
@@ -112,7 +109,7 @@ module.exports.dislikeCard = (req, res) => {
       if (err.name === 'CastError') {
         responseBadRequestError(res);
       } else {
-        responseServerError(res, err.message);
+        responseServerError(res);
       }
     });
 };

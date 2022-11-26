@@ -6,7 +6,7 @@ const ServerError = require('../errors/ServerError');
 const BadRequestError = require('../errors/BadRequestError');
 const NotFoundError = require('../errors/NotFoundError');
 const ConflictError = require('../errors/ConflictError');
-const HTTPError = require('../errors/HTTPError');
+const UnauthorizedError = require('../errors/UnauthorizedError');
 
 module.exports.getUsers = (req, res, next) => {
   // Находим всех пользователей
@@ -81,8 +81,8 @@ module.exports.login = (req, res, next) => {
       res.send({ token });
     })
     .catch((err) => {
-      if (err instanceof HTTPError) {
-        next(err);
+      if (err.name === 'UnauthorizedError') {
+        next(new UnauthorizedError('Некорректные данные для пользователя'));
       } else {
         next(new ServerError('На сервере произошла ошибка'));
       }

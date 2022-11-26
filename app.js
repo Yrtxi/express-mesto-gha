@@ -22,7 +22,6 @@ app.use('*', (req, res) => {
   res.status(httpCodes.notFound).send(notFoundPage);
 });
 
-// Централизованный обработчик ошибок
 app.use((err, req, res, next) => {
   res.status(err.statusCode).send({ message: err.message });
   next();

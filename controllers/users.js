@@ -6,6 +6,7 @@ const ServerError = require('../errors/ServerError');
 const BadRequestError = require('../errors/BadRequestError');
 const NotFoundError = require('../errors/NotFoundError');
 const ConflictError = require('../errors/ConflictError');
+const HTTPError = require('../errors/HTTPError');
 
 module.exports.getUsers = (req, res, next) => {
   // Находим всех пользователей
@@ -73,17 +74,17 @@ module.exports.createUser = (req, res, next) => {
 
 module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
-  return User.findUserByCredentials(email, password)
+  User.findUserByCredentials(email, password)
     .then((user) => {
       // cоздадим и вернем токен
       const token = jwt.sign({ _id: user._id }, 'some-secret-key', { expiresIn: '7d' });
       res.send({ token });
     })
     .catch((err) => {
-      if (err.name !== 'UnauthorizedError') {
-        next(new ServerError('На сервере произошла ошибка'));
-      } else {
+      if (err instanceof HTTPError) {
         next(err);
+      } else {
+        next(new ServerError('На сервере произошла ошибка'));
       }
     });
 };

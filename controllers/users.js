@@ -2,26 +2,37 @@ const { constants } = require('http2');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const ServerError = require('../errors/ServerError');
 const BadRequestError = require('../errors/BadRequestError');
 const NotFoundError = require('../errors/NotFoundError');
 const ConflictError = require('../errors/ConflictError');
-const HTTPError = require('../errors/HTTPError');
+const UnauthorizedError = require('../errors/UnauthorizedError');
 
 module.exports.getUsers = (req, res, next) => {
   // Находим всех пользователей
   User.find({})
     // Вернем записанные в базу данные
     .then((users) => res.send({ data: users }))
-    .catch(() => next(new ServerError('На сервере произошла ошибка')));
+    .catch((err) => next(err));
 };
 
 module.exports.getCurrentUser = (req, res, next) => {
   // Находим пользователя по id
   User.findById(req.user._id)
   // Вернем записанные в базу данные
-    .then((user) => res.send({ data: user }))
-    .catch(() => next(new NotFoundError('Пользователь не найден')));
+    .then((user) => {
+      if (user) {
+        res.send({ data: user });
+      } else {
+        next(new NotFoundError('Пользователь не найден'));
+      }
+    })
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        next(new BadRequestError('Некорректный id пользователя'));
+      } else {
+        next(err);
+      }
+    });
 };
 
 module.exports.getUserById = (req, res, next) => {
@@ -36,9 +47,9 @@ module.exports.getUserById = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        next(new BadRequestError('Некорректные данные для пользователя'));
+        next(new BadRequestError('Некорректный id пользователя'));
       } else {
-        next(new ServerError('На сервере произошла ошибка'));
+        next(err);
       }
     });
 };
@@ -67,7 +78,7 @@ module.exports.createUser = (req, res, next) => {
       } else if (err.code === 11000) {
         next(new ConflictError('Пользователь с такой почтой уже существует'));
       } else {
-        next(new ServerError('На сервере произошла ошибка'));
+        next(err);
       }
     });
 };
@@ -81,10 +92,10 @@ module.exports.login = (req, res, next) => {
       res.send({ token });
     })
     .catch((err) => {
-      if (err instanceof HTTPError) {
-        next(err);
+      if (err.name === 'UnauthorizedError') {
+        next(new UnauthorizedError('Неправильные почта или пароль'));
       } else {
-        next(new ServerError('На сервере произошла ошибка'));
+        next(err);
       }
     });
 };
@@ -104,7 +115,7 @@ module.exports.updateProfile = (req, res, next) => {
       if (err.name === 'ValidationError' || err.name === 'CastError') {
         next(new BadRequestError('Некорректные данные для пользователя'));
       } else {
-        next(new ServerError('На сервере произошла ошибка'));
+        next(err);
       }
     });
 };
@@ -124,7 +135,7 @@ module.exports.updateAvatar = (req, res, next) => {
       if (err.name === 'ValidationError' || err.name === 'CastError') {
         next(new BadRequestError('Некорректные данные для пользователя'));
       } else {
-        next(new ServerError('На сервере произошла ошибка'));
+        next(err);
       }
     });
 };

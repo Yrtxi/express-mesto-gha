@@ -1,10 +1,8 @@
 const { constants } = require('http2');
 const Card = require('../models/card');
-const ServerError = require('../errors/ServerError');
 const BadRequestError = require('../errors/BadRequestError');
 const NotFoundError = require('../errors/NotFoundError');
 const ForbiddenError = require('../errors/ForbiddenError');
-const HTTPError = require('../errors/HTTPError');
 
 module.exports.getCards = (req, res, next) => {
   // Находим все карточки
@@ -12,7 +10,7 @@ module.exports.getCards = (req, res, next) => {
     .populate(['owner', 'likes'])
     // Вернем записанные в базу данные
     .then((cards) => res.send({ data: cards }))
-    .catch(() => next(new ServerError('На сервере произошла ошибка')));
+    .catch((err) => next(err));
 };
 
 module.exports.createCard = (req, res, next) => {
@@ -27,7 +25,7 @@ module.exports.createCard = (req, res, next) => {
       if (err.name === 'ValidationError') {
         next(new BadRequestError('Некорректные данные для карточки'));
       } else {
-        next(new ServerError('На сервере произошла ошибка'));
+        next(err);
       }
     });
 };
@@ -47,10 +45,8 @@ module.exports.deleteCardById = (req, res, next) => {
     .catch((err) => {
       if (err.name === 'CastError') {
         next(new BadRequestError('Некорректные данные для карточки'));
-      } else if (err instanceof HTTPError) {
-        next(err);
       } else {
-        next(new ServerError('На сервере произошла ошибка'));
+        next(err);
       }
     });
 };
@@ -74,7 +70,7 @@ module.exports.likeCard = (req, res, next) => {
       if (err.name === 'CastError') {
         next(new BadRequestError('Некорретный id для карточки'));
       } else {
-        next(new ServerError('На сервере произошла ошибка'));
+        next(err);
       }
     });
 };
@@ -98,7 +94,7 @@ module.exports.dislikeCard = (req, res, next) => {
       if (err.name === 'CastError') {
         next(new BadRequestError('Некорректный id для карточки'));
       } else {
-        next(new ServerError('На сервере произошла ошибка'));
+        next(err);
       }
     });
 };

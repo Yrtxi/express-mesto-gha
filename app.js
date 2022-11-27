@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const { errors } = require('celebrate');
+const { constants } = require('http2');
 const { login, createUser } = require('./controllers/users');
 const NotFoundError = require('./errors/NotFoundError');
 const auth = require('./middlewares/auth');
@@ -26,9 +27,11 @@ app.use('*', (req, res, next) => next(new NotFoundError('Страница не �
 app.use(errors());
 
 // Централизованный обработчик ошибок
+// eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
-  res.status(err.statusCode).send({ message: err.message });
-  next();
+  const statusCode = err.statusCode || constants.HTTP_STATUS_INTERNAL_SERVER_ERROR;
+  const message = err.message || 'На сервере произошла ошибка';
+  res.status(statusCode).send({ message });
 });
 
 app.listen(PORT);

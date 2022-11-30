@@ -1,10 +1,12 @@
 const { celebrate, Joi } = require('celebrate');
 
+const urlRegex = /^https?:\/\/(www\.)?[a-zA-Z\0-9]+\.[\w\-._~:/?#[\]@!$&'()*+,;=]{2,}#?$/;
+
 module.exports.createUserValidator = celebrate({
   body: Joi.object().keys({
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
-    avatar: Joi.string().uri({ scheme: ['http', 'https'] }),
+    avatar: Joi.string().regex(urlRegex).required(),
     email: Joi.string().email().required(),
     password: Joi.string().required(),
   }),
@@ -19,7 +21,7 @@ module.exports.loginUserValidator = celebrate({
 
 module.exports.updateAvatarValidator = celebrate({
   body: Joi.object().keys({
-    avatar: Joi.string().uri({ scheme: ['http', 'https'] }).required(),
+    avatar: Joi.string().regex(urlRegex).required(),
   }),
 });
 

@@ -66,12 +66,11 @@ module.exports.createUser = (req, res, next) => {
       name, about, avatar, email, password: hash,
     }))
     // Вернем записанные в базу данные
-    .then((user) => res.status(constants.HTTP_STATUS_CREATED).send({
-      name: user.name,
-      about: user.about,
-      avatar: user.avatar,
-      email: user.email,
-    }))
+    .then((data) => {
+      const user = data.toObject();
+      delete user.password;
+      res.status(constants.HTTP_STATUS_CREATED).send(user);
+    })
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new BadRequestError('Некорректные данные для пользователя'));
